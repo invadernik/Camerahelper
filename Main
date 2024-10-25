@@ -1,1 +1,72 @@
+import cv2
+import numpy as np
 
+# Set video file path
+VIDEO_FILE = 'path/to/your/video.mp4'
+
+# Set object detection model (e.g., YOLOv3, SSD MobileNet)
+MODEL = 'yolov3'
+
+# Load video capture
+cap = cv2.VideoCapture(VIDEO_FILE)
+
+# Load object detection model
+if MODEL == 'yolov3':
+    net = cv2.dnn.readNet('yolov3.weights', 'yolov3.cfg')
+    classes = []
+    with open('coco.names', 'r') as f:
+        classes = [line.strip() for line in f.readlines()]
+else:
+    # Add other models as needed
+    raise ValueError('Unsupported model')
+
+# Set detection parameters
+CONFIDENCE_THRESHOLD = 0.5
+NMS_THRESHOLD = 0.4
+
+# Initialize timestamp and frame counter
+timestamp = 0
+frame_count = 0
+
+# Analyze video
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Get frame dimensions
+    (H, W) = frame.shape[:2]
+
+    # Preprocess frame for object detection
+    blob = cv2.dnn.blobFromImage(frame, 1/255, (416, 416), swapRB=True, crop=False)
+    net.setInput(blob)
+    outputs = net.forward(net.getUnconnectedOutLayersNames())
+
+    # Initialize detected objects list
+    detected_objects = []
+
+    # Parse object detection outputs
+    for output in outputs:
+        for detection in output:
+            scores = detection[5:]
+            class_id = np.argmax(scores)
+            confidence = scores[class_id]
+            if confidence > CONFIDENCE_THRESHOLD:
+                # Object detected, extract coordinates and class label
+                x, y, w, h = detection[0:4] * np.array([W, H, W, H])
+                label = classes[class_id]
+                detected_objects.append((label, (x, y, w, h), timestamp))
+
+    # Non-maximum suppression (NMS) to reduce duplicate detections
+    detected_objects = cv2.dnn.NMSBoxes(detected_objects, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
+
+    # Print detected objects with timestamps
+    for (label, (x, y, w, h), timestamp) in detected_objects:
+        print(f'Timestamp: {timestamp:.2f} sec, Label: {label}, Coordinates: ({x:.2f}, {y:.2f}, {w:.2f}, {h:.2f})')
+
+    # Increment timestamp and frame counter
+    timestamp += 1 / 30  # Assuming 30 FPS
+    frame_count += 1
+
+# Release video capture
+cap.release()
