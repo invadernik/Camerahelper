@@ -5,8 +5,8 @@ import numpy as np
 
 
 # Path to the model files
-prototxt_path = os.path.sep.join(['models', 'MobileNetSSD_deploy.prototxt'])
-model_path = os.path.sep.join(['models', 'MobileNetSSD_deploy.caffemodel'])
+prototxt_path = 'MobileNetSSD_deploy.prototxt.txt'
+model_path = 'MobileNetSSD_deploy.caffemodel'
 
 # Initialize the list of class labels MobileNet SSD was trained to detect
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
@@ -19,7 +19,7 @@ print("[INFO] Loading model...")
 net = cv2.dnn.readNetFromCaffe(prototxt_path, model_path)
 
 # Specify the video file path
-video_path = '/workspaces/codespaces-blank/Project Space 01/Camera Tracker/Running - 294.mp4'  # Replace with your video file
+video_path = '/workspaces/codespaces-blank/models/Running - 294.mp4'  # Replace with your video file
 
 # Initialize video capture
 cap = cv2.VideoCapture(video_path)
